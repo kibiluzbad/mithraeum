@@ -4,7 +4,8 @@ require.config({
 		'underscore': '../lib/underscore',
 		'backbone': '../lib/backbone',
 		'cs': '../tools/cs',
-    	'coffee-script': '../tools/coffee-script'    	
+    	'coffee-script': '../tools/coffee-script'   ,
+    	'text': '../lib/text' 	
 	}, 
 	shim: {
 		'backbone': {

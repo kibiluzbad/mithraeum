@@ -1,6 +1,7 @@
-define ['jquery','underscore','backbone','cs!views/moviesView'], ($,_,Backbone,MoviesView) ->
+define ['jquery','underscore','backbone','cs!views/moviesView','text!templates/appViewTemplate'], ($,_,Backbone,MoviesView,template) ->
   class AppView extends Backbone.View
     el: '#wrap'
+    template: $(template)
     initialize: (options) ->
       @subviews = [
         new MoviesView collection: @collection        
