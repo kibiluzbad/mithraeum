@@ -1,11 +1,13 @@
-define ['jquery','underscore','backbone','cs!models/movie','text!templates/movieViewTemplate'], ($,_,Backbone,Movie,template) ->
+define ['jquery','underscore','backbone','cs!models/movie','text!templates/movieViewTemplate.html'], ($,_,Backbone,Movie,template) ->
   class MovieView extends Backbone.View
     className: 'movie'
-    template: $(template)
+    template: _.template(template)
+    tagName: 'li'
     initialize: (options) ->
       
     render: ->
-      html = @template.tmpl @model.toJSON()
+      data = @model.toJSON()
+      html = @template(data)
       ($ @el).html html
       @
   

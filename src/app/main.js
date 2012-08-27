@@ -5,7 +5,8 @@ require.config({
 		'backbone': '../lib/backbone',
 		'cs': '../tools/cs',
     	'coffee-script': '../tools/coffee-script'   ,
-    	'text': '../lib/text' 	
+    	'text': '../lib/text',
+    	'templates': 'templates'
 	}, 
 	shim: {
 		'backbone': {
