@@ -1,1 +1,14 @@
-<h2><%=title%> (<%=year%>)</h2>
+<img src="<%=image%>" />
+<div class="info">
+<h3 class="accent-color"><%=title%> (<%=year%>)</h3>
+<p>
+	<%=plot%>
+</p>
+<ul class="tags">
+  <% _.each(tags,function(tag){%>
+  	<li><%=tag%></li>
+  <%});%>
+</ul>
+</div>
+<p class="clear"></p>
+

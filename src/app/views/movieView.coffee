@@ -8,7 +8,7 @@ define ['jquery','underscore','backbone','cs!models/movie','text!templates/movie
     render: ->
       data = @model.toJSON()
       html = @template(data)
-      ($ @el).html html
+      ($ @el).html html      
       @
   
   
