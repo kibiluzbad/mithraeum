@@ -8,7 +8,7 @@ define ['jquery','underscore','backbone','cs!models/movie','text!templates/movie
     initialize: (options) ->
     
     showDetails: =>
-    	Backbone.history.navigate('movie/'+get.id,true)
+    	Backbone.history.navigate('movie/'+@model.id,true)
     
     render: ->
       data = @model.toJSON()
