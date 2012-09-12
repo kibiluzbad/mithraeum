@@ -10,14 +10,22 @@ namespace Mithraeum.Api.Modules
     public class Movies
         : NancyModule
     {
-        public Movies(IDocumentSession session, IMoviesFinder finder)
+        private readonly IDocumentSession _session;
+        private readonly IMoviesFinder _finder;
+
+        public Movies(IDocumentSession session,
+                      IMoviesFinder finder)
             : base("/api/movies")
         {
-            After += _ => session.SaveChanges();
+            _session = session;
+            _finder = finder;
+
+
+            After += _ => _session.SaveChanges();
 
             Get["/"] = _ =>
                            {
-                               var movies = session.Load<Movie>();
+                               var movies = _session.Load<Movie>();
 
                                return Response
                                    .AsJson(movies);
@@ -25,14 +33,16 @@ namespace Mithraeum.Api.Modules
 
             Post["/"] = _ =>
                             {
-                                
                                 var title = (string) Request.Form.name;
-                                IEnumerable<FinderOption> list = finder.FindByName(title);
+
+                                IEnumerable<FinderOption> list = _finder.FindByName(title);
 
                                 if (1 == list.Count())
                                 {
-                                    Movie movie = finder.FindByImdbId(list.FirstOrDefault());
-                                    session.Store(movie,movie.Imdbid);
+                                    Movie movie = _finder.FindByImdbId(list.FirstOrDefault());
+
+                                    _session.Store(movie, movie.Imdbid);
+
                                     return Response.AsJson(movie);
                                 }
 
@@ -42,7 +52,7 @@ namespace Mithraeum.Api.Modules
                                                              Options = list
                                                          };
 
-                                session.Store(ambigousResult, ambigousResult.Title);
+                                _session.Store(ambigousResult, ambigousResult.Title);
 
                                 return Response
                                     .AsJson(ambigousResult);
