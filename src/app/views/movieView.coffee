@@ -3,8 +3,13 @@ define ['jquery','underscore','backbone','cs!models/movie','text!templates/movie
     className: 'movie'
     template: _.template(template)
     tagName: 'li'
+    events:
+      "click .show-details":"showDetails"    
     initialize: (options) ->
-      
+    
+    showDetails: =>
+    	Backbone.history.navigate('movie/'+get.id,true)
+    
     render: ->
       data = @model.toJSON()
       html = @template(data)
