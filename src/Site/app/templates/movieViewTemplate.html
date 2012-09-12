@@ -1,0 +1,14 @@
+<img src="<%=image%>" class="show-details" />
+<div class="info">
+<h3 class="accent-color show-details"><%=title%> (<%=year%>)</h3>
+<p>
+	<%=plot%>
+</p>
+<ul class="tags">
+  <% _.each(genres,function(genre){%>
+  	<li><%=genre%></li>
+  <%});%>
+</ul>
+</div>
+<p class="clear"></p>
+

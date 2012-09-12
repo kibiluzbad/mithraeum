@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mithraeum - My movies</title>
+    <link href="css/jquery.metro.css" type='text/css' rel='stylesheet' />
+    <script data-main="app/main" src="lib/require.js"></script>
+    <style>
+    #wrap{
+    	max-width:1000px;
+    	margin: 0px auto;
+    }
+    #header{
+    	height:80px;
+    	border-bottom:2px dotted #ddd;
+    }
+    #content{
+    	padding:10px
+    }
+    ul.movies{
+    	display:inline;
+    	list-style-type:none;
+    }
+    ul.tags{
+    	float:right;
+    	list-style-type:none;
+    	display:inline;
+    	padding:0px;margin:0px
+    }
+	 ul.tags li {
+	    border: 1px solid #DDDDDD;
+	    display: inline;
+	    padding: 4px;
+	}
+	.search{
+		margin-top:20px;
+	}
+	.search input[type=text]{
+	   border: medium none;
+       font-size: 1em;
+       width: 382px;
+	}
+	.search form{
+		border: 1px solid #DDDDDD;
+	    float: right;
+	    margin-top: -54px;
+	    padding: 2px;
+	    width: 400px;
+	}
+	
+	.search input[type=submit]{
+		border:none;		
+		text-indent:-9999px;
+		background: url('http://i3.msdn.microsoft.com/Areas/Epx/Themes/Metro/Content/ImageSprite.png') no-repeat scroll -194px -3px;
+	}
+	.clear{
+		clear:both;
+	}
+	.movies .movie img{
+		float:left;
+		width:200px
+	}
+	.movies .movie .info{
+		margin-left: 235px;		
+	}
+	.movie{
+		margin-bottom: 30px;
+	}
+	
+	.menu ul{
+		display:inline;
+	}
+	.menu ul li{
+		display:inline;
+	}
+    </style>
+</head>
+<body accent="teal" theme="light">
+    <div id="wrap"></div>
+</body>
+</html>
