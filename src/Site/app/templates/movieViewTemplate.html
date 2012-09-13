@@ -1,11 +1,12 @@
-<img src="<%=image%>" class="show-details" />
+<img src="<%=Picture_Path%>" class="show-details" />
 <div class="info">
-<h3 class="accent-color show-details"><%=title%> (<%=year%>)</h3>
+<h3 class="accent-color show-details"><%=Title%> (<%=Year%>)</h3>
 <p>
-	<%=plot%>
+	<%=Plot%>
 </p>
+<div class="rating"></div>
 <ul class="tags">
-  <% _.each(genres,function(genre){%>
+  <% _.each(Genres,function(genre){%>
   	<li><%=genre%></li>
   <%});%>
 </ul>

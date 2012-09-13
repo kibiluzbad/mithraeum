@@ -10,22 +10,18 @@ namespace Mithraeum.Api.Modules
     public class Movies
         : NancyModule
     {
-        private readonly IDocumentSession _session;
-        private readonly IMoviesFinder _finder;
-
         public Movies(IDocumentSession session,
                       IMoviesFinder finder)
             : base("/api/movies")
         {
-            _session = session;
-            _finder = finder;
-
-
-            After += _ => _session.SaveChanges();
-
+            After += _ => session.SaveChanges();
             Get["/"] = _ =>
                            {
-                               var movies = _session.Load<Movie>();
+                               var movies = session
+                                   .Query<Movie>()
+                                   .OrderByDescending(c=>c.Rating)
+                                   .ThenBy(c=>c.Title)
+                                   .ToList();
 
                                return Response
                                    .AsJson(movies);
@@ -35,13 +31,13 @@ namespace Mithraeum.Api.Modules
                             {
                                 var title = (string) Request.Form.name;
 
-                                IEnumerable<FinderOption> list = _finder.FindByName(title);
+                                IEnumerable<FinderOption> list = finder.FindByName(title);
 
                                 if (1 == list.Count())
                                 {
-                                    Movie movie = _finder.FindByImdbId(list.FirstOrDefault());
+                                    Movie movie = finder.FindByImdbId(list.FirstOrDefault());
 
-                                    _session.Store(movie, movie.Imdbid);
+                                    session.Store(movie, movie.Imdbid);
 
                                     return Response.AsJson(movie);
                                 }
@@ -52,11 +48,24 @@ namespace Mithraeum.Api.Modules
                                                              Options = list
                                                          };
 
-                                _session.Store(ambigousResult, ambigousResult.Title);
+                                session.Store(ambigousResult, ambigousResult.Title);
 
                                 return Response
                                     .AsJson(ambigousResult);
                             };
+
+            Post["/(?<imdbid>tt[\\d]+)"] = _ =>
+                                               {
+                                                   
+                                                   var imdbid = (string) _.imdbid;
+
+                                                   var movie = finder.FindByImdbId(new FinderOption() {Imdbid = imdbid});
+
+                                                   session.Store(movie, movie.Imdbid);
+
+                                                   return Response.AsJson(movie);
+
+                                               };
         }
     }
 }

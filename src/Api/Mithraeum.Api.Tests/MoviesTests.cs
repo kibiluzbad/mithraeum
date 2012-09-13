@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mithraeum.Api.Model;
@@ -8,6 +10,7 @@ using NUnit.Framework;
 using Nancy.Json;
 using Nancy.Testing;
 using Raven.Client;
+using Raven.Client.Linq;
 
 namespace Mithraeum.Api.Tests
 {
@@ -21,7 +24,7 @@ namespace Mithraeum.Api.Tests
             var fakeFinder = new Mock<IMoviesFinder>();
 
             fakeSession
-                .Setup(c => c.Load<Movie>())
+                .Setup(c => c.Query<Movie>())
                 .Returns(GetMovies());
 
             var bootstrapper = new FakeBootstrapper()
@@ -52,7 +55,7 @@ namespace Mithraeum.Api.Tests
             var fakeFinder = new Mock<IMoviesFinder>();
 
             fakeSession
-                .Setup(c => c.Load<Movie>())
+                .Setup(c => c.Query<Movie>())
                 .Returns(GetMovies());
 
             var bootstrapper = new FakeBootstrapper()
@@ -83,7 +86,7 @@ namespace Mithraeum.Api.Tests
             var fakeSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
 
-            var matrixResult = new FinderOption {Imdbid = "tt0133093", Name = "Matrix"};
+            var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
             fakeFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -94,7 +97,7 @@ namespace Mithraeum.Api.Tests
 
             fakeFinder
                .Setup(c => c.FindByImdbId(It.Is<FinderOption>(option => option.Imdbid == "tt0133093")))
-               .Returns(GetMovies()[0]);
+               .Returns(GetMatrixMovieInfo());
 
             var bootstrapper = new FakeBootstrapper()
                                    {
@@ -125,9 +128,9 @@ namespace Mithraeum.Api.Tests
             var fakeSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
 
-            var matrixResult = new FinderOption {Imdbid = "tt0133093", Name = "Matrix"};
+            var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
-            var matrixReloadedResult = new FinderOption {Imdbid = "tt0133093", Name = "MatrixReloaded"};
+            var matrixReloadedResult = new FinderOption {Imdbid = "tt0133093", Title = "MatrixReloaded"};
 
             fakeFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -165,9 +168,9 @@ namespace Mithraeum.Api.Tests
             var fakeSession = new Mock<IDocumentSession>();
             var mockFinder = new Mock<IMoviesFinder>();
 
-            var matrixResult = new FinderOption {Imdbid = "tt0133093", Name = "Matrix"};
+            var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
-            var matrixReloadedResult = new FinderOption {Imdbid = "tt0133093", Name = "MatrixReloaded"};
+            var matrixReloadedResult = new FinderOption {Imdbid = "tt0133093", Title = "MatrixReloaded"};
 
             mockFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -203,9 +206,9 @@ namespace Mithraeum.Api.Tests
             var fakeSession = new Mock<IDocumentSession>();
             var mockFinder = new Mock<IMoviesFinder>();
 
-            var matrixResult = new FinderOption {Imdbid = "tt0133093", Name = "Matrix"};
+            var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
-            var matrixReloadedResult = new FinderOption {Imdbid = "tt0133093", Name = "MatrixReloaded"};
+            var matrixReloadedResult = new FinderOption {Imdbid = "tt0133093", Title = "MatrixReloaded"};
 
             mockFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -240,7 +243,7 @@ namespace Mithraeum.Api.Tests
             var fakeSession = new Mock<IDocumentSession>();
             var mockFinder = new Mock<IMoviesFinder>();
 
-            var matrixResult = new FinderOption {Imdbid = "tt0133093", Name = "Matrix"};
+            var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
             mockFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -251,7 +254,7 @@ namespace Mithraeum.Api.Tests
 
             mockFinder
                .Setup(c => c.FindByImdbId(It.Is<FinderOption>(options => options.Imdbid == "tt0133093")))
-               .Returns(GetMovies()[0])
+               .Returns(GetMatrixMovieInfo())
                .Verifiable();
 
             var bootstrapper = new FakeBootstrapper()
@@ -283,7 +286,7 @@ namespace Mithraeum.Api.Tests
                 .Setup(c => c.Store(It.IsAny<Movie>(), It.Is<string>(imdbid => imdbid == "tt0133093")))
                 .Verifiable();
 
-            var matrixResult = new FinderOption {Imdbid = "tt0133093", Name = "Matrix"};
+            var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
             fakeFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -294,7 +297,7 @@ namespace Mithraeum.Api.Tests
 
             fakeFinder
                 .Setup(c => c.FindByImdbId(It.Is<FinderOption>(options => options.Imdbid == "tt0133093")))
-                .Returns(GetMovies()[0])
+                .Returns(GetMatrixMovieInfo())
                 .Verifiable();
 
             var bootstrapper = new FakeBootstrapper()
@@ -327,7 +330,7 @@ namespace Mithraeum.Api.Tests
                 .Setup(c => c.Store(It.IsAny<Movie>(), It.Is<string>(imdbid => imdbid == "tt0133093")))
                 .Verifiable();
 
-            var matrixResult = new FinderOption { Imdbid = "tt0133093", Name = "Matrix" };
+            var matrixResult = new FinderOption { Imdbid = "tt0133093", Title = "Matrix" };
 
             fakeFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -338,7 +341,7 @@ namespace Mithraeum.Api.Tests
 
             fakeFinder
                 .Setup(c => c.FindByImdbId(It.Is<FinderOption>(options => options.Imdbid == "tt0133093")))
-                .Returns(GetMovies()[0])
+                .Returns(GetMatrixMovieInfo())
                 .Verifiable();
 
             var bootstrapper = new FakeBootstrapper()
@@ -370,9 +373,9 @@ namespace Mithraeum.Api.Tests
                 .Setup(c => c.Store(It.IsAny<Ambiguous>(),It.IsAny<string>()))
                 .Verifiable();
 
-            var matrixResult = new FinderOption { Imdbid = "tt0133093", Name = "Matrix" };
+            var matrixResult = new FinderOption { Imdbid = "tt0133093", Title = "Matrix" };
 
-            var matrixReloadedResult = new FinderOption { Imdbid = "tt0133093", Name = "MatrixReloaded" };
+            var matrixReloadedResult = new FinderOption { Imdbid = "tt0133093", Title = "MatrixReloaded" };
 
             fakeFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -411,9 +414,9 @@ namespace Mithraeum.Api.Tests
                 .Setup(c => c.Store(It.IsAny<Ambiguous>(), It.IsAny<string>()))
                 .Verifiable();
 
-            var matrixResult = new FinderOption { Imdbid = "tt0133093", Name = "Matrix" };
+            var matrixResult = new FinderOption { Imdbid = "tt0133093", Title = "Matrix" };
 
-            var matrixReloadedResult = new FinderOption { Imdbid = "tt0133093", Name = "MatrixReloaded" };
+            var matrixReloadedResult = new FinderOption { Imdbid = "tt0133093", Title = "MatrixReloaded" };
 
             fakeFinder
                 .Setup(c => c.FindByName(It.Is<string>(name => name == "The matrix")))
@@ -442,13 +445,29 @@ namespace Mithraeum.Api.Tests
 
         }
 
-        private Movie[] GetMovies()
+        private IRavenQueryable<Movie> GetMovies()
         {
-            const string json = "[{image:'http://ia.media-imdb.com/images/M/MV5BMjEzNjg1NTg2NV5BMl5BanBnXkFtZTYwNjY3MzQ5._V1._SY317_CR6,0,214,317_.jpg',title:'Matrix',year:1999,plot:'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',rate:8.7,genres:[\"Action\",\"Adventure\",\"Sci-Fi\"],imdbid:'tt0133093'},{image:'http://ia.media-imdb.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1._SY317_.jpg',title:'Inception',year:2010,plot:'In a world where technology exists to enter the human mind through dream invasion, a highly skilled thief is given a final chance at redemption which involves executing his toughest job to date: Inception.',rate:8.8,genres:[\"Action\",\"Adventure\",\"Mystery\"], imdbid:'tt1375666'}]";
+            const string json = "[{image:'http://ia.media-imdb.com/images/M/MV5BMjEzNjg1NTg2NV5BMl5BanBnXkFtZTYwNjY3MzQ5._V1._SY317_CR6,0,214,317_.jpg',title:'Matrix',year:1999,plot:'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',rating:8.7,genres:[\"Action\",\"Adventure\",\"Sci-Fi\"],imdbid:'tt0133093'},{image:'http://ia.media-imdb.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1._SY317_.jpg',title:'Inception',year:2010,plot:'In a world where technology exists to enter the human mind through dream invasion, a highly skilled thief is given a final chance at redemption which involves executing his toughest job to date: Inception.',rating:8.8,genres:[\"Action\",\"Adventure\",\"Mystery\"], imdbid:'tt1375666'}]";
 
             var serializer = new JavaScriptSerializer();
 
-            return serializer.Deserialize<Movie[]>(json);
+            var movies = serializer.Deserialize<IEnumerable<Movie>>(json);
+
+            var fake = new Mock<IRavenQueryable<Movie>>();
+
+            fake.Setup(c => c.GetEnumerator()).Returns(movies.GetEnumerator());
+            fake.Setup(c => c.Customize(It.IsAny<Action<IDocumentQueryCustomization>>())).Returns(fake.Object);
+
+            return fake.Object;
+        }
+
+        private Movie GetMatrixMovieInfo()
+        {
+            const string json = "{image:'http://ia.media-imdb.com/images/M/MV5BMjEzNjg1NTg2NV5BMl5BanBnXkFtZTYwNjY3MzQ5._V1._SY317_CR6,0,214,317_.jpg',title:'Matrix',year:1999,plot:'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',rating:8.7,genres:[\"Action\",\"Adventure\",\"Sci-Fi\"],imdbid:'tt0133093'}";
+
+            var serializer = new JavaScriptSerializer();
+
+            return serializer.Deserialize<Movie>(json);
         }
     }
 }

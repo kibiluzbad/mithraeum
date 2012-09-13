@@ -3,6 +3,7 @@ require.config({
 		'jquery': '../lib/jquery',
 		'underscore': '../lib/underscore',
 		'backbone': '../lib/backbone',
+		'raty': '../lib/jquery.raty',
 		'cs': '../tools/cs',
     	'coffee-script': '../tools/coffee-script'   ,
     	'text': '../lib/text',

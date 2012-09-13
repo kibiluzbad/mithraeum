@@ -1,5 +1,6 @@
 using System;
 using Autofac;
+using Mithraeum.Api.Model;
 using Mithraeum.Api.Modules;
 using Raven.Client;
 

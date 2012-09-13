@@ -1,0 +1,21 @@
+{
+  "Name": "Temp/Movies/ByRatingAndTitleSortByRatingTitle",
+  "Map": "from doc in docs.Movies\r\nselect new { Rating = doc.Rating, Title = doc.Title }",
+  "Maps": [
+    "from doc in docs.Movies\r\nselect new { Rating = doc.Rating, Title = doc.Title }"
+  ],
+  "Reduce": null,
+  "TransformResults": null,
+  "IsMapReduce": false,
+  "IsCompiled": false,
+  "IsTemp": true,
+  "Stores": {},
+  "Indexes": {},
+  "SortOptions": {
+    "Rating": "Double",
+    "Title": "String"
+  },
+  "Analyzers": {},
+  "Fields": [],
+  "Type": "Temp"
+}
