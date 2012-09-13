@@ -3,7 +3,6 @@ using Mithraeum.Api.Model;
 using Mithraeum.Api.Modules;
 using Raven.Client;
 using Raven.Client.Document;
-using Raven.Client.Embedded;
 
 namespace Mithraeum.Api.Infra
 {
