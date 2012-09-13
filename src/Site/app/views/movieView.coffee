@@ -1,4 +1,11 @@
-define ['jquery','underscore','backbone','raty','cs!models/movie','text!templates/movieViewTemplate.html'], ($,_,Backbone,Raty,Movie,template) ->
+define [
+  'jquery',
+  'underscore',
+  'backbone',
+  'raty',
+  'cs!models/movie',
+  'text!templates/movieViewTemplate.html'
+  ], ($,_,Backbone,Raty,Movie,template) ->
   class MovieView extends Backbone.View
     className: 'movie'
     template: _.template(template)
@@ -14,6 +21,7 @@ define ['jquery','underscore','backbone','raty','cs!models/movie','text!template
       data = @model.toJSON()
       html = @template(data)
       ($ @el).html html
+      
       ($ @el).find('.rating').raty(
         readOnly: true
         score: @model.get("Rating")

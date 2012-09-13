@@ -457,6 +457,7 @@ namespace Mithraeum.Api.Tests
 
             fake.Setup(c => c.GetEnumerator()).Returns(movies.GetEnumerator());
             fake.Setup(c => c.Customize(It.IsAny<Action<IDocumentQueryCustomization>>())).Returns(fake.Object);
+            fake.Setup(c => c.Expression).Returns(movies.AsQueryable().Expression);
 
             return fake.Object;
         }

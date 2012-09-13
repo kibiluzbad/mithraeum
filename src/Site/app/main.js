@@ -4,6 +4,7 @@ require.config({
 		'underscore': '../lib/underscore',
 		'backbone': '../lib/backbone',
 		'raty': '../lib/jquery.raty',
+		'lazyLoad': '../lib/jquery.lazyload',		
 		'cs': '../tools/cs',
     	'coffee-script': '../tools/coffee-script'   ,
     	'text': '../lib/text',
