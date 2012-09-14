@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Mithraeum.Api.Infra;
 using Mithraeum.Api.Model;
 using Nancy;
 using Raven.Client;
@@ -45,10 +46,11 @@ namespace Mithraeum.Api.Modules
                                 var ambigousResult = new Ambiguous
                                                          {
                                                              Title = title,
-                                                             Options = list
+                                                             Options = list,
+                                                             Slug = title.Slugify()
                                                          };
 
-                                session.Store(ambigousResult, ambigousResult.Title);
+                                session.Store(ambigousResult, ambigousResult.Slug);
 
                                 return Response
                                     .AsJson(ambigousResult);

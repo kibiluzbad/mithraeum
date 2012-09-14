@@ -150,6 +150,7 @@
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Infra\DependecyModule.cs" />
+    <Compile Include="Infra\StringExtensions.cs" />
     <Compile Include="Model\Movie.cs" />
     <Compile Include="Model\Ambiguous.cs" />
     <Compile Include="Model\FinderOption.cs" />

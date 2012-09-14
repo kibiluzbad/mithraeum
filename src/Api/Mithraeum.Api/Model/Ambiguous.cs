@@ -6,5 +6,6 @@ namespace Mithraeum.Api.Model
     {
         public string Title { get; set; }
         public IEnumerable<FinderOption> Options { get; set; }
+        public string Slug { get; set; }
     }
 }

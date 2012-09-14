@@ -8,7 +8,7 @@ namespace Mithraeum.Api.Infra
 {
     public class Thoth : IMoviesFinder
     {
-        private const string Root = "http://thothapp.heroku.com/";
+        private const string Root = "http://localhost:4567";
 
         public IEnumerable<FinderOption> FindByName(string name)
         {
