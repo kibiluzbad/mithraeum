@@ -24,8 +24,10 @@ define [
       $content.empty()
       
       $header = $(@el).find("#header")
-      
-      $header.append(new SearchView().render().el)
+
+      sw = new SearchView collection: @collection
+
+      $header.append(sw.render().el)
       $header.append(new MenuView().render().el)
       
       $content.append subview.render().el for subview in @subviews

@@ -29,7 +29,7 @@ namespace Mithraeum.Api.Modules
 
                                var query = string.IsNullOrWhiteSpace(term)
                                                ? _session.Query<Movie_AdvancedSearch.MovieSearchResult, Movie_AdvancedSearch>()
-                                               : _session.Query<Movie_AdvancedSearch.MovieSearchResult, Movie_AdvancedSearch>().Search(c => c.Title,
+                                               : _session.Query<Movie_AdvancedSearch.MovieSearchResult, Movie_AdvancedSearch>().Search(c => c.Query,
                                                                                string.Format("*{0}*", term),
                                                                                options: SearchOptions.Or,
                                                                                escapeQueryOptions:
