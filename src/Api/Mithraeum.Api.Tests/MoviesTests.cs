@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using Mithraeum.Api.Infra.Indexes;
 using Mithraeum.Api.Model;
 using Mithraeum.Api.Modules;
 using Moq;
@@ -10,6 +12,8 @@ using NUnit.Framework;
 using Nancy.Json;
 using Nancy.Testing;
 using Raven.Client;
+using Raven.Client.Embedded;
+using Raven.Client.Indexes;
 using Raven.Client.Linq;
 
 namespace Mithraeum.Api.Tests
@@ -17,67 +21,81 @@ namespace Mithraeum.Api.Tests
     [TestFixture]
     public class MoviesTests
     {
+        public virtual void Execute(Action<IDocumentSession> action)
+        {
+            using (var store = new EmbeddableDocumentStore() {RunInMemory = true}.Initialize())
+            {
+                IndexCreation.CreateIndexes(Assembly.GetAssembly(typeof(Movie_AdvancedSearch)), store);
+
+                using (var session = store.OpenSession())
+                {
+                    action.Invoke(session);
+                }
+            }
+        }
+
         [Test]
         public void Should_list_all_movies_when_calling_Api_Movies()
         {
-            var fakeSession = new Mock<IDocumentSession>();
-            var fakeFinder = new Mock<IMoviesFinder>();
+            Execute(session =>
+                        {
+                            var fakeFinder = new Mock<IMoviesFinder>();
 
-            fakeSession
-                .Setup(c => c.Query<Movie>())
-                .Returns(GetMovies());
+                            session.Store(new Movie {Title = "The Matrix"});
+                            session.Store(new Movie {Title = "Inception"});
 
-            var bootstrapper = new FakeBootstrapper()
-                                   {
-                                       FakeSession = () => fakeSession.Object,
-                                       FakeFinder = () => fakeFinder.Object
-                                   };
+                            session.SaveChanges();
 
-            var browser = new Browser(bootstrapper);
-            
-            var response = browser
-                .Get("/api/movies", 
-                with => with.AjaxRequest());
+                            System.Threading.Thread.Sleep(1000); //BUG: Thread sleep for 1000ms so values can get indexed.
 
-            var serializer = new JavaScriptSerializer();
+                            var bootstrapper = new FakeBootstrapper()
+                                                   {
+                                                       FakeSession = () => session,
+                                                       FakeFinder = () => fakeFinder.Object
+                                                   };
 
-            var movies = serializer.DeserializeObject(response.Body.AsString()) as ICollection;
+                            var browser = new Browser(bootstrapper);
 
-            Assert.That(movies.Count,
-                Is.EqualTo(2));
-            
+                            var response = browser
+                                .Get("/api/movies",
+                                     with => with.AjaxRequest());
+
+                            var serializer = new JavaScriptSerializer();
+
+                            var movies = serializer.DeserializeObject(response.Body.AsString()) as ICollection;
+
+                            Assert.That(movies.Count,
+                                        Is.EqualTo(2));
+                        });
         }
 
         [Test]
         public void Should_use_jsonp_when_passing_callback_parameter()
         {
-            var fakeSession = new Mock<IDocumentSession>();
-            var fakeFinder = new Mock<IMoviesFinder>();
+            Execute(session =>
+                        {
+                            var fakeFinder = new Mock<IMoviesFinder>();
 
-            fakeSession
-                .Setup(c => c.Query<Movie>())
-                .Returns(GetMovies());
+                            var bootstrapper = new FakeBootstrapper()
+                                                   {
+                                                       FakeSession = () => session,
+                                                       FakeFinder = () => fakeFinder.Object
+                                                   };
 
-            var bootstrapper = new FakeBootstrapper()
-            {
-                FakeSession = () => fakeSession.Object,
-                FakeFinder = () => fakeFinder.Object
-            };
+                            var browser = new Browser(bootstrapper);
 
-            var browser = new Browser(bootstrapper);
+                            var reponse = browser.Get("/api/movies",
+                                                      with =>
+                                                          {
+                                                              with.AjaxRequest();
+                                                              with.Query("callback", "cb");
+                                                          });
 
-            var reponse = browser.Get("/api/movies", 
-                with =>
-            {
-                with.AjaxRequest();
-                with.Query("callback","cb");
-            });
+                            var result = reponse.Body.AsString();
 
-            var result = reponse.Body.AsString();
-
-            Assert.That(Regex.IsMatch(result,"cb\\([^\\)]+\\)"),
-                Is.True);
-
+                            Assert.That(Regex.IsMatch(result, "cb\\([^\\)]+\\)"),
+                                        Is.True);
+                        });
         }
 
         [Test]
@@ -443,6 +461,105 @@ namespace Mithraeum.Api.Tests
 
             mockSession.Verify(c => c.Store(It.IsAny<Ambiguous>()), Times.Never());
 
+        }
+
+        [Test]
+        public void Should_store_movie_when_posting_to_Movies_with_an_ImdbId()
+        {
+
+            var mockSession = new Mock<IDocumentSession>();
+            var fakeFinder = new Mock<IMoviesFinder>();
+            const string matrixImdbId = "tt0133093";
+
+            mockSession
+                .Setup(c => c.Store(It.IsAny<Movie>(),
+                                    It.Is<string>(d => matrixImdbId == d)))
+                .Verifiable();
+
+            fakeFinder
+                .Setup(c => c.FindByImdbId(It.IsAny<FinderOption>()))
+                .Returns(GetMatrixMovieInfo());
+
+            var bootstrapper = new FakeBootstrapper()
+                                   {
+                                       FakeSession = () => mockSession.Object,
+                                       FakeFinder = () => fakeFinder.Object
+                                   };
+
+            var browser = new Browser(bootstrapper);
+
+            browser.Post(string.Format("/api/movies/{0}", matrixImdbId),
+                         with => with.AjaxRequest());
+
+            mockSession.Verify(c => c.Store(It.IsAny<Ambiguous>()), Times.Never());
+        }
+
+        [Test]
+        public void Should_remove_movie_when_calling_Delete_to_Movies_with_an_ImdbId()
+        {
+
+            var mockSession = new Mock<IDocumentSession>();
+            var fakeFinder = new Mock<IMoviesFinder>();
+            const string matrixImdbId = "tt0133093";
+
+            mockSession
+               .Setup(c => c.Load<Movie>(It.Is<string>(d=>matrixImdbId == d)))
+               .Returns(new Movie{Imdbid = matrixImdbId, Title = "The Matrix"});
+
+            mockSession
+                .Setup(c => c.Delete(It.IsAny<Movie>()))
+                .Verifiable();
+
+            var bootstrapper = new FakeBootstrapper()
+            {
+                FakeSession = () => mockSession.Object,
+                FakeFinder = () => fakeFinder.Object
+            };
+
+            var browser = new Browser(bootstrapper);
+
+            browser.Delete(string.Format("/api/movies/{0}", matrixImdbId),
+                         with => with.AjaxRequest());
+
+            mockSession.Verify(c => c.Delete(It.Is<Movie>( d=> matrixImdbId == d.Imdbid)));
+        }
+
+        [Test]
+        public void Should_query_movies_by_Title_when_sending_Term_as_query_string()
+        {
+            Execute(session =>
+                        {
+                            session.Store(new Movie { Title = "The Matrix" });
+                            session.Store(new Movie { Title = "Inception" });
+                            session.SaveChanges();
+                            
+                            var fakeFinder = new Mock<IMoviesFinder>();
+                            const string term = "Matrix";
+                            
+                            var bootstrapper = new FakeBootstrapper()
+                            {
+                                FakeSession = () => session,
+                                FakeFinder = () => fakeFinder.Object
+                            };
+
+                            var browser = new Browser(bootstrapper);
+
+                            var response = browser.Get("/api/movies",
+                                         with =>
+                                             {
+                                                 with.AjaxRequest();
+                                                 with.Query("term",term);
+                                             });
+
+
+                            var serializer = new JavaScriptSerializer();
+
+                            var movies = serializer.DeserializeObject(response.Body.AsString()) as ICollection;
+
+                            Assert.That(movies.Count,
+                                        Is.EqualTo(1));
+                        }
+                );
         }
 
         private IRavenQueryable<Movie> GetMovies()

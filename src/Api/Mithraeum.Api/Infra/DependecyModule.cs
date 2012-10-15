@@ -1,8 +1,11 @@
-﻿using Autofac;
+﻿using System.Reflection;
+using Autofac;
 using Mithraeum.Api.Model;
 using Mithraeum.Api.Modules;
 using Raven.Client;
 using Raven.Client.Document;
+using Raven.Client.Indexes;
+using Module = Autofac.Module;
 
 namespace Mithraeum.Api.Infra
 {
@@ -10,10 +13,17 @@ namespace Mithraeum.Api.Infra
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(_ => new DocumentStore
-                                      {
-                                          ConnectionStringName = "RavenDB"
-                                      }.Initialize())
+            builder.Register(_ =>
+                                 {
+                                     var store = new DocumentStore
+                                         {
+                                             ConnectionStringName = "RavenDB"
+                                         }.Initialize();
+
+                                     IndexCreation.CreateIndexes(Assembly.GetExecutingAssembly(), store);
+
+                                     return store;
+                                 })
                 .As<IDocumentStore>()
                 .SingleInstance();
 

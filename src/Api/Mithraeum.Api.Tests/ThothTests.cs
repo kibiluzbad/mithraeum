@@ -31,7 +31,7 @@ namespace Mithraeum.Api.Tests
             Movie movie = finder.FindByImdbId(new FinderOption(){ Imdbid = "tt0133093"});
 
             Assert.That(movie.Title,
-                Is.EqualTo("Matrix"));
+                Is.EqualTo("The Matrix"));
 
         }
     }

@@ -2,26 +2,43 @@
 using System.Collections.Generic;
 using System.Linq;
 using Mithraeum.Api.Infra;
+using Mithraeum.Api.Infra.Indexes;
 using Mithraeum.Api.Model;
 using Nancy;
 using Raven.Client;
+using Raven.Client.Linq;
 
 namespace Mithraeum.Api.Modules
 {
     public class Movies
         : NancyModule
     {
+        private readonly IDocumentSession _session;
+
         public Movies(IDocumentSession session,
                       IMoviesFinder finder)
             : base("/api/movies")
         {
-            After += _ => session.SaveChanges();
+            _session = session;
+            
+            After += _ => _session.SaveChanges();
+
             Get["/"] = _ =>
                            {
-                               var movies = session
-                                   .Query<Movie>()
-                                   .OrderByDescending(c=>c.Rating)
-                                   .ThenBy(c=>c.Title)
+                               var term = (string) Request.Query.term;
+
+                               var query = string.IsNullOrWhiteSpace(term)
+                                               ? _session.Query<Movie_AdvancedSearch.MovieSearchResult, Movie_AdvancedSearch>()
+                                               : _session.Query<Movie_AdvancedSearch.MovieSearchResult, Movie_AdvancedSearch>().Search(c => c.Title,
+                                                                               string.Format("*{0}*", term),
+                                                                               options: SearchOptions.Or,
+                                                                               escapeQueryOptions:
+                                                                                   EscapeQueryOptions.AllowAllWildcards);
+
+                               var movies = query
+                                   .As<Movie>()
+                                   .OrderByDescending(c => c.Rating)
+                                   .ThenBy(c => c.Title)
                                    .ToList();
 
                                return Response
@@ -38,7 +55,7 @@ namespace Mithraeum.Api.Modules
                                 {
                                     Movie movie = finder.FindByImdbId(list.FirstOrDefault());
 
-                                    session.Store(movie, movie.Imdbid);
+                                    _session.Store(movie, movie.Imdbid);
 
                                     return Response.AsJson(movie);
                                 }
@@ -50,7 +67,7 @@ namespace Mithraeum.Api.Modules
                                                              Slug = title.Slugify()
                                                          };
 
-                                session.Store(ambigousResult, ambigousResult.Slug);
+                                _session.Store(ambigousResult, ambigousResult.Slug);
 
                                 return Response
                                     .AsJson(ambigousResult);
@@ -58,16 +75,29 @@ namespace Mithraeum.Api.Modules
 
             Post["/(?<imdbid>tt[\\d]+)"] = _ =>
                                                {
-                                                   
+
                                                    var imdbid = (string) _.imdbid;
 
                                                    var movie = finder.FindByImdbId(new FinderOption() {Imdbid = imdbid});
 
-                                                   session.Store(movie, movie.Imdbid);
+                                                   _session.Store(movie, movie.Imdbid);
 
                                                    return Response.AsJson(movie);
 
                                                };
+
+            Delete["/(?<imdbid>tt[\\d]+)"] = _ =>
+                                                 {
+
+                                                     var imdbid = (string) _.imdbid;
+
+                                                     var movie = _session.Load<Movie>(imdbid);
+
+                                                     _session.Delete(movie);
+
+                                                     return Response.AsJson(movie);
+
+                                                 };
         }
     }
 }
