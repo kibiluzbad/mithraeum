@@ -1,0 +1,20 @@
+{
+  "Name": "Movie/AdvancedSearch",
+  "Map": "docs.Movies.Select(movie => new {\r\n    Imdbid = movie.Imdbid,\r\n    Genres = movie.Genres,\r\n    Picture_Path = movie.Picture_Path,\r\n    Plot = movie.Plot,\r\n    Rating = ((decimal) movie.Rating),\r\n    Title = movie.Title,\r\n    Year = movie.Year,\r\n    Query = Enumerable.Concat(new System.Object[] {\r\n        movie.Title,\r\n        ((System.Object)(movie.Year))\r\n    },\r\n    movie.Genres)\r\n})",
+  "Maps": [
+    "docs.Movies.Select(movie => new {\r\n    Imdbid = movie.Imdbid,\r\n    Genres = movie.Genres,\r\n    Picture_Path = movie.Picture_Path,\r\n    Plot = movie.Plot,\r\n    Rating = ((decimal) movie.Rating),\r\n    Title = movie.Title,\r\n    Year = movie.Year,\r\n    Query = Enumerable.Concat(new System.Object[] {\r\n        movie.Title,\r\n        ((System.Object)(movie.Year))\r\n    },\r\n    movie.Genres)\r\n})"
+  ],
+  "Reduce": null,
+  "TransformResults": null,
+  "IsMapReduce": false,
+  "IsCompiled": false,
+  "IsTemp": false,
+  "Stores": {},
+  "Indexes": {
+    "Query": "Analyzed"
+  },
+  "SortOptions": {},
+  "Analyzers": {},
+  "Fields": [],
+  "Type": "Map"
+}
