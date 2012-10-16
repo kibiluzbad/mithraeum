@@ -9,5 +9,6 @@ define ['jquery','underscore','backbone','cs!collections/movies','cs!views/appVi
     index: ->      
       @view = new AppView collection: @movies      
       @movies.fetch()
+      @view.render()
     movieDetails: (id) ->
       alert "Detalhes"

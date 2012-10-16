@@ -12,7 +12,8 @@ define [
     tagName: 'ul'
     initialize: (options) ->
       @collection.bind 'change', @render, @
-      @collection.bind 'reset', @render, @
+      @collection.bind 'reset', @render, @	   
+      @collection.bind 'add', @render, @
     render: ->
       $(@el).empty()
       

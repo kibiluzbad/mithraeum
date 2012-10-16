@@ -13,6 +13,7 @@ define ['jquery','underscore','backbone','text!templates/searchViewTemplate.html
     doSearch:(event) =>
       event.preventDefault()
       term = $(@el).find("#query").val()
-      $.getJSON "http://localhost:18724/api/movies/?jsoncallback=?&term=" + term, (json) =>
+      $.ajax url: "http://localhost:18724/api/movies/?term=" + term, 
+      success: (json) =>
         @collection.reset(json)
-  
+      ,dataType: 'jsonp'

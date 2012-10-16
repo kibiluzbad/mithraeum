@@ -13,9 +13,7 @@ define [
     initialize: (options) ->
       @subviews = [
         new MoviesView collection: @collection        
-        ]
-      @collection.bind 'reset', @render, @
-      @collection.bind 'add', @render, @
+        ]     
     render: ->
       $(@el).empty()
       $(@el).html(@template())
