@@ -30,6 +30,9 @@ namespace Mithraeum.Api.Infra.Indexes
                                                            movie.Year
                                                        }
                                 .Concat(movie.Genres)
+                                .Concat(movie.Directors.Select(director => director.Name))
+                                .Concat(movie.Writers.Select(writer => writer.Name))
+                                .Concat(movie.Cast.Select(cast => cast.Actor))
                                        };
 
             Indexes.Add(c => c.Query, FieldIndexing.Analyzed);

@@ -4,6 +4,11 @@
 <p>
 	<%=Plot%>
 </p>
+<div class="director">
+	<% _.each(Directors,function(director){%>
+  	<%=director.Name%>&nbsp;
+  <%});%>
+</div>
 <div class="rating"></div>
 <ul class="tags">
   <% _.each(Genres,function(genre){%>

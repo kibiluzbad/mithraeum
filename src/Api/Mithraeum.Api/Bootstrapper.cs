@@ -20,5 +20,11 @@ namespace Mithraeum.Api
 
             builder.Update(existingContainer.ComponentRegistry);
         }
+
+        protected override void ApplicationStartup(ILifetimeScope container, Nancy.Bootstrapper.IPipelines pipelines)
+        {
+            base.ApplicationStartup(container, pipelines);
+            Nancy.Json.JsonSettings.MaxJsonLength = int.MaxValue;
+        }
     }
 }

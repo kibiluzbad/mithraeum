@@ -98,6 +98,21 @@ namespace Mithraeum.Api.Modules
                                                      return Response.AsJson(movie);
 
                                                  };
+
+            Get["/UpdateAll"] = _ =>
+                                    {
+                                        foreach (var m in _session.Query<Movie>().ToList())
+                                        {
+                                            var imdbid = m.Imdbid;
+                                            var movie = finder.FindByImdbId(new FinderOption() { Imdbid = imdbid });
+
+                                            _session.Delete(m);
+                                            _session.SaveChanges();
+                                            _session.Store(movie,imdbid);
+                                        }
+
+                                        return HttpStatusCode.OK;
+                                    };
         }
     }
 }
