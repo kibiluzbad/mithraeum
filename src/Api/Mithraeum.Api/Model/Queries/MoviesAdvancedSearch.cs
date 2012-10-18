@@ -44,27 +44,18 @@ namespace Mithraeum.Api.Model.Queries
 
         protected virtual IRavenQueryable<Movie_AdvancedSearch.MovieSearchResult> GetCriteria(IRavenQueryable<Movie_AdvancedSearch.MovieSearchResult> query)
         {
-            IDictionary<string, Func<string, string>> keywords = new Dictionary<string, Func<string, string>>
+            IDictionary<string, Func<string, Match>> keywords = new Dictionary<string, Func<string, Match>>
                                                                      {
-                                                                         {"Gender",term =>
-                                                                                       {
-                                                                                           var match = Regex.Match(
-                                                                                               term, "Gender:([^:]+)");
-                                                                                           
-                                                                                           return !match.Success 
-                                                                                               ? null 
-                                                                                               : match.Groups[1].Value;
-                                                                                       }},
-                                                                         {"Director",term =>
-                                                                                         {
-                                                                                             var match = Regex.Match(
-                                                                                               term, "Director:([^:]+)");
-                                                                                           
-                                                                                           return !match.Success 
-                                                                                               ? null 
-                                                                                               : match.Groups[1].Value;
-                                                                                         }},
+                                                                         {"Gender",term => Regex.Match(term, "Gender:([^:]+)")},
+                                                                         {"Director",term => Regex.Match(term, "Director:([^:]+)")},
                                                                      };
+
+            foreach (var keyword in keywords)
+            {
+                var match = keyword.Value.Invoke(Term);
+                
+            }
+            throw new NotImplementedException();
         }
 
         
