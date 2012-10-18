@@ -47,6 +47,9 @@
     <Reference Include="Autofac.Configuration">
       <HintPath>..\packages\Autofac.2.6.3.862\lib\NET40\Autofac.Configuration.dll</HintPath>
     </Reference>
+    <Reference Include="AutofacContrib.CommonServiceLocator">
+      <HintPath>..\packages\Autofac.CommonServiceLocator.Indy.2.6.3.863\lib\net40\AutofacContrib.CommonServiceLocator.dll</HintPath>
+    </Reference>
     <Reference Include="BouncyCastle.Crypto, Version=1.7.4137.9688, Culture=neutral, PublicKeyToken=a4292a325f69b123, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\RavenDB.Database.1.2.2115-Unstable\lib\net40\BouncyCastle.Crypto.dll</HintPath>
@@ -78,6 +81,9 @@
       <HintPath>..\packages\RavenDB.Database.1.2.2115-Unstable\lib\net40\Lucene.Net.Contrib.Spatial.NTS.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Practices.ServiceLocation">
+      <HintPath>..\packages\CommonServiceLocator.1.0\lib\NET35\Microsoft.Practices.ServiceLocation.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
       <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
@@ -147,6 +153,12 @@
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Infra\DependecyModule.cs" />
+    <Compile Include="Model\Queries\IMoviesAdvancedSearch.cs" />
+    <Compile Include="Infra\Queries\IQuery.cs" />
+    <Compile Include="Infra\Queries\IQueryFactory.cs" />
+    <Compile Include="Model\Queries\MoviesAdvancedSearch.cs" />
+    <Compile Include="Infra\Queries\QueryFactory.cs" />
+    <Compile Include="Infra\Queries\RavenDbQueryBase.cs" />
     <Compile Include="Infra\StringExtensions.cs" />
     <Compile Include="Model\Movie.cs" />
     <Compile Include="Model\Ambiguous.cs" />

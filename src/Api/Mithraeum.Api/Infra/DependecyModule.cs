@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using Autofac;
+using Microsoft.Practices.ServiceLocation;
+using Mithraeum.Api.Infra.Queries;
 using Mithraeum.Api.Model;
+using Mithraeum.Api.Model.Queries;
 using Mithraeum.Api.Modules;
 using Raven.Client;
 using Raven.Client.Document;
@@ -31,7 +34,20 @@ namespace Mithraeum.Api.Infra
                 .As<IDocumentSession>()
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<Thoth>().As<IMoviesFinder>();
+            builder.RegisterType<Thoth>()
+                .As<IMoviesFinder>();
+
+            builder.RegisterType<MoviesAdvancedSearch>()
+                .As<IMoviesAdvancedSearch>();
+
+            builder.Register(c=> new QueryFactory(c.Resolve<IServiceLocator>()))
+                .As<IQueryFactory>()
+                .SingleInstance();
+
+            builder.Register(c => ServiceLocator.Current)
+                .As<IServiceLocator>()
+                .SingleInstance();
+
         }
     }
 }

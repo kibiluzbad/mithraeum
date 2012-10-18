@@ -119,6 +119,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContextTests.cs" />
     <Compile Include="FakeBootstrapper.cs" />
     <Compile Include="MoviesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

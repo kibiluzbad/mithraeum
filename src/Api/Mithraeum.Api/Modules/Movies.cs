@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Mithraeum.Api.Infra;
 using Mithraeum.Api.Infra.Indexes;
+using Mithraeum.Api.Infra.Queries;
 using Mithraeum.Api.Model;
+using Mithraeum.Api.Model.Queries;
 using Nancy;
 using Raven.Client;
 using Raven.Client.Linq;
@@ -14,32 +16,28 @@ namespace Mithraeum.Api.Modules
         : NancyModule
     {
         private readonly IDocumentSession _session;
+        private readonly IMoviesFinder _finder;
+        private readonly IQueryFactory _queryFactory;
 
         public Movies(IDocumentSession session,
-                      IMoviesFinder finder)
+                      IMoviesFinder finder,
+                      IQueryFactory queryFactory)
             : base("/api/movies")
         {
             _session = session;
-            
+            _finder = finder;
+            _queryFactory = queryFactory;
+
             After += _ => _session.SaveChanges();
 
             Get["/"] = _ =>
                            {
                                var term = (string) Request.Query.term;
 
-                               var query = string.IsNullOrWhiteSpace(term)
-                                               ? _session.Query<Movie_AdvancedSearch.MovieSearchResult, Movie_AdvancedSearch>()
-                                               : _session.Query<Movie_AdvancedSearch.MovieSearchResult, Movie_AdvancedSearch>().Search(c => c.Query,
-                                                                               string.Format("*{0}*", term),
-                                                                               options: SearchOptions.Or,
-                                                                               escapeQueryOptions:
-                                                                                   EscapeQueryOptions.AllowAllWildcards);
+                               var query = _queryFactory.Get<IMoviesAdvancedSearch>();
+                               query.Term = term;
 
-                               var movies = query
-                                   .As<Movie>()
-                                   .OrderByDescending(c => c.Rating)
-                                   .ThenBy(c => c.Title)
-                                   .ToList();
+                               var movies = query.Execute();
 
                                return Response
                                    .AsJson(movies);
@@ -49,11 +47,11 @@ namespace Mithraeum.Api.Modules
                             {
                                 var title = (string) Request.Form.name;
 
-                                IEnumerable<FinderOption> list = finder.FindByName(title);
+                                IEnumerable<FinderOption> list = _finder.FindByName(title);
 
                                 if (1 == list.Count())
                                 {
-                                    Movie movie = finder.FindByImdbId(list.FirstOrDefault());
+                                    Movie movie = _finder.FindByImdbId(list.FirstOrDefault());
 
                                     _session.Store(movie, movie.Imdbid);
 
@@ -78,7 +76,7 @@ namespace Mithraeum.Api.Modules
 
                                                    var imdbid = (string) _.imdbid;
 
-                                                   var movie = finder.FindByImdbId(new FinderOption() {Imdbid = imdbid});
+                                                   var movie = _finder.FindByImdbId(new FinderOption() {Imdbid = imdbid});
 
                                                    _session.Store(movie, movie.Imdbid);
 
@@ -104,7 +102,7 @@ namespace Mithraeum.Api.Modules
                                         foreach (var m in _session.Query<Movie>().ToList())
                                         {
                                             var imdbid = m.Imdbid;
-                                            var movie = finder.FindByImdbId(new FinderOption() { Imdbid = imdbid });
+                                            var movie = _finder.FindByImdbId(new FinderOption() { Imdbid = imdbid });
 
                                             _session.Delete(m);
                                             _session.SaveChanges();

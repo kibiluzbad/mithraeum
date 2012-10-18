@@ -5,7 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Mithraeum.Api.Infra.Indexes;
+using Mithraeum.Api.Infra.Queries;
 using Mithraeum.Api.Model;
+using Mithraeum.Api.Model.Queries;
 using Mithraeum.Api.Modules;
 using Moq;
 using NUnit.Framework;
@@ -37,65 +39,76 @@ namespace Mithraeum.Api.Tests
         [Test]
         public void Should_list_all_movies_when_calling_Api_Movies()
         {
-            Execute(session =>
-                        {
-                            var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeSession = new Mock<IDocumentSession>();
+            var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
+            var fakeMoviesAdvancedSearch = new Mock<IMoviesAdvancedSearch>();
 
-                            session.Store(new Movie {Title = "The Matrix"});
-                            session.Store(new Movie {Title = "Inception"});
+            fakeMoviesAdvancedSearch.Setup(c => c.Execute())
+                .Returns(GetMovies());
 
-                            session.SaveChanges();
+            fakeQueryFactory
+                .Setup(c => c.Get<IMoviesAdvancedSearch>())
+                .Returns(() => fakeMoviesAdvancedSearch.Object);
 
-                            System.Threading.Thread.Sleep(1000); //BUG: Thread sleep for 1000ms so values can get indexed.
+            var bootstrapper = new FakeBootstrapper()
+                                   {
+                                       FakeSession = () => fakeSession.Object,
+                                       FakeFinder = () => fakeFinder.Object,
+                                       FakeQueryFactor = () => fakeQueryFactory.Object
+                                   };
 
-                            var bootstrapper = new FakeBootstrapper()
-                                                   {
-                                                       FakeSession = () => session,
-                                                       FakeFinder = () => fakeFinder.Object
-                                                   };
+            var browser = new Browser(bootstrapper);
 
-                            var browser = new Browser(bootstrapper);
+            var response = browser
+                .Get("/api/movies",
+                     with => with.AjaxRequest());
 
-                            var response = browser
-                                .Get("/api/movies",
-                                     with => with.AjaxRequest());
+            var serializer = new JavaScriptSerializer();
 
-                            var serializer = new JavaScriptSerializer();
+            var movies = serializer.DeserializeObject(response.Body.AsString()) as ICollection;
 
-                            var movies = serializer.DeserializeObject(response.Body.AsString()) as ICollection;
+            Assert.That(movies.Count,
+                        Is.EqualTo(2));
 
-                            Assert.That(movies.Count,
-                                        Is.EqualTo(2));
-                        });
         }
 
         [Test]
         public void Should_use_jsonp_when_passing_callback_parameter()
         {
-            Execute(session =>
-                        {
-                            var fakeFinder = new Mock<IMoviesFinder>();
 
-                            var bootstrapper = new FakeBootstrapper()
-                                                   {
-                                                       FakeSession = () => session,
-                                                       FakeFinder = () => fakeFinder.Object
-                                                   };
+            var fakeSession = new Mock<IDocumentSession>();
+            var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
+            var fakeMoviesAdvancedSearch = new Mock<IMoviesAdvancedSearch>();
 
-                            var browser = new Browser(bootstrapper);
+            fakeMoviesAdvancedSearch.Setup(c => c.Execute())
+                .Returns(GetMovies());
 
-                            var reponse = browser.Get("/api/movies",
-                                                      with =>
-                                                          {
-                                                              with.AjaxRequest();
-                                                              with.Query("callback", "cb");
-                                                          });
+            fakeQueryFactory
+                .Setup(c => c.Get<IMoviesAdvancedSearch>())
+                .Returns(() => fakeMoviesAdvancedSearch.Object);
 
-                            var result = reponse.Body.AsString();
+            var bootstrapper = new FakeBootstrapper()
+                                   {
+                                       FakeSession = () => fakeSession.Object,
+                                       FakeFinder = () => fakeFinder.Object,
+                                       FakeQueryFactor = () => fakeQueryFactory.Object
+                                   };
 
-                            Assert.That(Regex.IsMatch(result, "cb\\([^\\)]+\\)"),
-                                        Is.True);
-                        });
+            var browser = new Browser(bootstrapper);
+
+            var reponse = browser.Get("/api/movies",
+                                      with =>
+                                          {
+                                              with.AjaxRequest();
+                                              with.Query("callback", "cb");
+                                          });
+
+            var result = reponse.Body.AsString();
+
+            Assert.That(Regex.IsMatch(result, "cb\\([^\\)]+\\)"),
+                        Is.True);
         }
 
         [Test]
@@ -103,6 +116,7 @@ namespace Mithraeum.Api.Tests
         {
             var fakeSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
@@ -120,7 +134,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
                                    {
                                        FakeSession = () => fakeSession.Object,
-                                       FakeFinder = () => fakeFinder.Object
+                                       FakeFinder = () => fakeFinder.Object,
+                                       FakeQueryFactor = () => fakeQueryFactory.Object
                                    };
 
             var browser = new Browser(bootstrapper);
@@ -145,6 +160,7 @@ namespace Mithraeum.Api.Tests
         {
             var fakeSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
@@ -161,7 +177,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => fakeSession.Object,
-                FakeFinder = () => fakeFinder.Object
+                FakeFinder = () => fakeFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -185,6 +202,7 @@ namespace Mithraeum.Api.Tests
         {
             var fakeSession = new Mock<IDocumentSession>();
             var mockFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
@@ -202,7 +220,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => fakeSession.Object,
-                FakeFinder = () => mockFinder.Object
+                FakeFinder = () => mockFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -223,6 +242,7 @@ namespace Mithraeum.Api.Tests
         {
             var fakeSession = new Mock<IDocumentSession>();
             var mockFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
@@ -239,7 +259,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => fakeSession.Object,
-                FakeFinder = () => mockFinder.Object
+                FakeFinder = () => mockFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -260,6 +281,7 @@ namespace Mithraeum.Api.Tests
         {
             var fakeSession = new Mock<IDocumentSession>();
             var mockFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             var matrixResult = new FinderOption {Imdbid = "tt0133093", Title = "Matrix"};
 
@@ -278,7 +300,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => fakeSession.Object,
-                FakeFinder = () => mockFinder.Object
+                FakeFinder = () => mockFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -299,6 +322,7 @@ namespace Mithraeum.Api.Tests
         {
             var mockSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             mockSession
                 .Setup(c => c.Store(It.IsAny<Movie>(), It.Is<string>(imdbid => imdbid == "tt0133093")))
@@ -321,7 +345,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
                                    {
                                        FakeSession = () => mockSession.Object,
-                                       FakeFinder = () => fakeFinder.Object
+                                       FakeFinder = () => fakeFinder.Object,
+                                       FakeQueryFactor = () => fakeQueryFactory.Object
                                    };
 
             var browser = new Browser(bootstrapper);
@@ -343,6 +368,7 @@ namespace Mithraeum.Api.Tests
         {
             var mockSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             mockSession
                 .Setup(c => c.Store(It.IsAny<Movie>(), It.Is<string>(imdbid => imdbid == "tt0133093")))
@@ -365,7 +391,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => mockSession.Object,
-                FakeFinder = () => fakeFinder.Object
+                FakeFinder = () => fakeFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -386,6 +413,7 @@ namespace Mithraeum.Api.Tests
         {
             var mockSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             mockSession
                 .Setup(c => c.Store(It.IsAny<Ambiguous>(),It.IsAny<string>()))
@@ -406,7 +434,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => mockSession.Object,
-                FakeFinder = () => fakeFinder.Object
+                FakeFinder = () => fakeFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -427,6 +456,7 @@ namespace Mithraeum.Api.Tests
         {
             var mockSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
 
             mockSession
                 .Setup(c => c.Store(It.IsAny<Ambiguous>(), It.IsAny<string>()))
@@ -447,7 +477,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => mockSession.Object,
-                FakeFinder = () => fakeFinder.Object
+                FakeFinder = () => fakeFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -469,6 +500,8 @@ namespace Mithraeum.Api.Tests
 
             var mockSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
+
             const string matrixImdbId = "tt0133093";
 
             mockSession
@@ -483,7 +516,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
                                    {
                                        FakeSession = () => mockSession.Object,
-                                       FakeFinder = () => fakeFinder.Object
+                                       FakeFinder = () => fakeFinder.Object,
+                                       FakeQueryFactor = () => fakeQueryFactory.Object
                                    };
 
             var browser = new Browser(bootstrapper);
@@ -500,6 +534,8 @@ namespace Mithraeum.Api.Tests
 
             var mockSession = new Mock<IDocumentSession>();
             var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
+
             const string matrixImdbId = "tt0133093";
 
             mockSession
@@ -513,7 +549,8 @@ namespace Mithraeum.Api.Tests
             var bootstrapper = new FakeBootstrapper()
             {
                 FakeSession = () => mockSession.Object,
-                FakeFinder = () => fakeFinder.Object
+                FakeFinder = () => fakeFinder.Object,
+                FakeQueryFactor = () => fakeQueryFactory.Object
             };
 
             var browser = new Browser(bootstrapper);
@@ -527,56 +564,54 @@ namespace Mithraeum.Api.Tests
         [Test]
         public void Should_query_movies_by_Title_when_sending_Term_as_query_string()
         {
-            Execute(session =>
-                        {
-                            session.Store(new Movie { Title = "The Matrix" });
-                            session.Store(new Movie { Title = "Inception" });
-                            session.SaveChanges();
-                            
-                            var fakeFinder = new Mock<IMoviesFinder>();
-                            const string term = "Matrix";
-                            
-                            var bootstrapper = new FakeBootstrapper()
-                            {
-                                FakeSession = () => session,
-                                FakeFinder = () => fakeFinder.Object
-                            };
 
-                            var browser = new Browser(bootstrapper);
+            var fakeSession = new Mock<IDocumentSession>();
+            var fakeFinder = new Mock<IMoviesFinder>();
+            var fakeQueryFactory = new Mock<IQueryFactory>();
+            var fakeMoviesAdvancedSearch = new Mock<IMoviesAdvancedSearch>();
 
-                            var response = browser.Get("/api/movies",
-                                         with =>
-                                             {
-                                                 with.AjaxRequest();
-                                                 with.Query("term",term);
-                                             });
+            fakeMoviesAdvancedSearch.Setup(c => c.Execute())
+                .Returns(() => new []{GetMatrixMovieInfo()});
+
+            fakeQueryFactory
+                .Setup(c => c.Get<IMoviesAdvancedSearch>())
+                .Returns(() => fakeMoviesAdvancedSearch.Object);
+
+            const string term = "Matrix";
+
+            var bootstrapper = new FakeBootstrapper()
+                                   {
+                                       FakeSession = () => fakeSession.Object,
+                                       FakeFinder = () => fakeFinder.Object,
+                                       FakeQueryFactor = () => fakeQueryFactory.Object
+                                   };
+
+            var browser = new Browser(bootstrapper);
+
+            var response = browser.Get("/api/movies",
+                                       with =>
+                                           {
+                                               with.AjaxRequest();
+                                               with.Query("term", term);
+                                           });
 
 
-                            var serializer = new JavaScriptSerializer();
+            var serializer = new JavaScriptSerializer();
 
-                            var movies = serializer.DeserializeObject(response.Body.AsString()) as ICollection;
+            var movies = serializer.DeserializeObject(response.Body.AsString()) as ICollection;
 
-                            Assert.That(movies.Count,
-                                        Is.EqualTo(1));
-                        }
-                );
+            Assert.That(movies.Count,
+                        Is.EqualTo(1));
+
         }
 
-        private IRavenQueryable<Movie> GetMovies()
+        private IEnumerable<Movie> GetMovies()
         {
             const string json = "[{image:'http://ia.media-imdb.com/images/M/MV5BMjEzNjg1NTg2NV5BMl5BanBnXkFtZTYwNjY3MzQ5._V1._SY317_CR6,0,214,317_.jpg',title:'Matrix',year:1999,plot:'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',rating:8.7,genres:[\"Action\",\"Adventure\",\"Sci-Fi\"],imdbid:'tt0133093'},{image:'http://ia.media-imdb.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1._SY317_.jpg',title:'Inception',year:2010,plot:'In a world where technology exists to enter the human mind through dream invasion, a highly skilled thief is given a final chance at redemption which involves executing his toughest job to date: Inception.',rating:8.8,genres:[\"Action\",\"Adventure\",\"Mystery\"], imdbid:'tt1375666'}]";
 
             var serializer = new JavaScriptSerializer();
 
-            var movies = serializer.Deserialize<IEnumerable<Movie>>(json);
-
-            var fake = new Mock<IRavenQueryable<Movie>>();
-
-            fake.Setup(c => c.GetEnumerator()).Returns(movies.GetEnumerator());
-            fake.Setup(c => c.Customize(It.IsAny<Action<IDocumentQueryCustomization>>())).Returns(fake.Object);
-            fake.Setup(c => c.Expression).Returns(movies.AsQueryable().Expression);
-
-            return fake.Object;
+            return serializer.Deserialize<IEnumerable<Movie>>(json);
         }
 
         private Movie GetMatrixMovieInfo()

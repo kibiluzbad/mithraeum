@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Web;
 using Autofac;
+using AutofacContrib.CommonServiceLocator;
+using Microsoft.Practices.ServiceLocation;
 using Nancy;
 using Nancy.Bootstrappers.Autofac;
 
@@ -19,6 +21,8 @@ namespace Mithraeum.Api
             builder.RegisterAssemblyModules(Assembly.GetExecutingAssembly());
 
             builder.Update(existingContainer.ComponentRegistry);
+
+            ServiceLocator.SetLocatorProvider(() => new AutofacServiceLocator(existingContainer));
         }
 
         protected override void ApplicationStartup(ILifetimeScope container, Nancy.Bootstrapper.IPipelines pipelines)
